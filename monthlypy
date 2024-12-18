@@ -1,0 +1,79 @@
+from netCDF4 import Dataset
+import numpy as np
+import pandas as pd  # Ensure pandas is imported
+import plotly.express as px
+
+# Path to your NetCDF file
+file_path = '/Users/admin/Downloads/Gridded Methane Data/GEPA_Annual.nc'
+
+# Open the NetCDF file
+dataset = Dataset(file_path, mode='r')
+
+# Print file information
+print("NetCDF File Information:")
+print("File Name:", dataset.filepath())
+print("Dimensions:", dataset.dimensions)
+print("Variables:", dataset.variables)
+print("Global Attributes:", dataset.ncattrs())
+
+# Print details about each variable
+print("\nVariables Details:")
+for var_name in dataset.variables:
+    var = dataset.variables[var_name]
+    print(f"Variable Name: {var_name}")
+    print(f"  Dimensions: {var.dimensions}")
+    print(f"  Shape: {var.shape}")
+    print(f"  Data Type: {var.dtype}")
+    print(f"  Attributes: {var.ncattrs()}")
+
+# Check for the time variable
+if 'time' in dataset.variables:
+    time_var = dataset.variables['time']
+    print(f"\nTime Variable: {time_var}")
+    print(f"  Dimensions: {time_var.dimensions}")
+    print(f"  Shape: {time_var.shape}")
+    print(f"  Data Type: {time_var.dtype}")
+    print(f"  Values: {time_var[:]}")  # Print time values
+
+    # Assuming the time variable represents years, you can calculate the number of years
+    num_years = time_var.shape[0]  # Number of entries in the time variable
+    print(f"\nNumber of Years of Data: {num_years}")
+else:
+    print("No time variable found in the dataset.")
+
+# Extract the data for 'emissions_1A_Combustion_Mobile'
+emissions_data = dataset.variables['emissions_1A_Combustion_Mobile'][:]  # Assuming the variable exists
+latitudes = dataset.variables['lat'][:]  # Extract latitude data
+longitudes = dataset.variables['lon'][:]  # Extract longitude data
+
+# Create a DataFrame for Plotly
+latitudes_mesh, longitudes_mesh = np.meshgrid(latitudes, longitudes)
+df = pd.DataFrame({
+    'Latitude': latitudes_mesh.flatten(),
+    'Longitude': longitudes_mesh.flatten(),
+    'Emissions': emissions_data.flatten()
+})
+
+# Filter out NaN values
+df = df.dropna()
+
+# Close the dataset
+dataset.close()
+
+# Create an interactive heatmap
+fig = px.density_mapbox(
+    df, 
+    lat='Latitude', 
+    lon='Longitude', 
+    z='Emissions', 
+    radius=15,  # Adjust the radius for better visibility
+    mapbox_style="open-street-map", 
+    title='Methane Emissions from Mobile Combustion',
+    center={"lat": np.mean(latitudes), "lon": np.mean(longitudes)},
+    zoom=3,  # Adjust the zoom level to focus on specific areas
+    opacity=0.6,  # Set opacity
+    color_continuous_scale=px.colors.sequential.Plasma  # Use a different color scale
+)
+
+# Show the figure
+fig.show()
