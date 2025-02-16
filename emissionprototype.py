@@ -9,7 +9,7 @@ import requests
 from netCDF4 import Dataset
 
 # Set your API key for Gemini API
-API_KEY = "AIzaSyByv_WgXNqmq-oRcneXp_iA-b-t1-XLmkA"
+API_KEY = "AIzaSyA9AOZxgBUn_ooy4D1iP4_cw4d5OrsDQSk"
 GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent"
 
 # Paths to your NetCDF files for methane emissions
